@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  CODING
+  FITNESS
+  HEALTH
+  FINANCE
+  HOUSE
+  STUDY
+  WORK
+  AVOIDANCE
+  OTHER
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  coins        Int           @default(0)
+  xp           Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tasks        Task[]
+  weeklyGoals  WeeklyGoal[]
+  rewards      Reward[]
+  achievements Achievement?
+  streak       Streak?
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+
+  title       String
+  description String?
+  category    Category?
+
+  date        DateTime
+  points      Int         @default(0)
+
+  isCompleted Boolean     @default(false)
+  completedAt DateTime?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model WeeklyGoal {
+  id            String     @id @default(uuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+
+  weekStartDate DateTime
+  title         String
+  description   String?
+  category      Category?
+
+  isAvoidGoal   Boolean    @default(false)
+  isCompleted   Boolean    @default(false)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Reward {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  title       String
+  description String?
+  cost        Int
+  redeemedAt  DateTime?
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Achievement {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id])
+
+  name        String
+  description String?
+  icon        String?
+  achievedAt  DateTime  @default(now())
+}
+
+model Streak {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+
+  currentStreak     Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
+}
