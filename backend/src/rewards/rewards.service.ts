@@ -114,37 +114,39 @@ export class RewardsService {
       throw new BadRequestException('Reward has already been redeemed');
     }
 
-    // Get user to check coin balance
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+    // Use interactive transaction to prevent race conditions
+    const updatedReward = await this.prisma.$transaction(async (tx) => {
+      // Get user inside transaction to ensure atomic check
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+      });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
 
-    // Check if user has enough coins
-    if (user.coins < reward.cost) {
-      throw new BadRequestException(
-        `Insufficient coins. You have ${user.coins} coins but need ${reward.cost}`,
-      );
-    }
+      // Check if user has enough coins
+      if (user.coins < reward.cost) {
+        throw new BadRequestException(
+          `Insufficient coins. You have ${user.coins} coins but need ${reward.cost}`,
+        );
+      }
 
-    // Use transaction to deduct coins and mark reward as redeemed
-    const [updatedReward] = await this.prisma.$transaction([
-      this.prisma.reward.update({
-        where: { id: rewardId },
-        data: {
-          redeemedAt: new Date(),
-        },
-      }),
-      this.prisma.user.update({
+      // Deduct coins and mark reward as redeemed atomically
+      await tx.user.update({
         where: { id: userId },
         data: {
           coins: { decrement: reward.cost },
         },
-      }),
-    ]);
+      });
+
+      return tx.reward.update({
+        where: { id: rewardId },
+        data: {
+          redeemedAt: new Date(),
+        },
+      });
+    });
 
     return updatedReward;
   }

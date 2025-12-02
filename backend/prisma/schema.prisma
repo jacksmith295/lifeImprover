@@ -68,9 +68,11 @@ model WeeklyGoal {
   title         String
   description   String?
   category      Category?
+  points        Int        @default(0)
 
   isAvoidGoal   Boolean    @default(false)
   isCompleted   Boolean    @default(false)
+  xpAwarded     Boolean    @default(false)
 
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

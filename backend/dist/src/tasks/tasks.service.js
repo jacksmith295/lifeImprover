@@ -106,7 +106,7 @@ let TasksService = class TasksService {
             endOfDay.setHours(23, 59, 59, 999);
             where.date = {
                 gte: startOfDay,
-                lt: endOfDay,
+                lte: endOfDay,
             };
         }
         return this.prisma.task.findMany({
@@ -164,10 +164,14 @@ let TasksService = class TasksService {
             updateData.isCompleted = dto.isCompleted;
             updateData.completedAt = dto.isCompleted ? new Date() : null;
         }
-        return this.prisma.task.update({
+        const updatedTask = await this.prisma.task.update({
             where: { id: taskId },
             data: updateData,
         });
+        if (dto.isCompleted === true) {
+            await this.updateStreakIfAllComplete(userId, task.date);
+        }
+        return updatedTask;
     }
     async delete(taskId, userId) {
         await this.findOne(taskId, userId);

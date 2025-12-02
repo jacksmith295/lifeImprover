@@ -15,15 +15,15 @@ export declare class AuthService {
         access_token: string;
     }>;
     getProfile(userId: string): Promise<{
-        id: string;
-        email: string;
-        coins: number;
-        xp: number;
-        createdAt: Date;
         streak: {
             currentStreak: number;
             longestStreak: number;
             lastCompletedDate: Date | null;
         } | null;
+        id: string;
+        email: string;
+        coins: number;
+        xp: number;
+        createdAt: Date;
     }>;
 }

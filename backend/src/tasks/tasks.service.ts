@@ -139,7 +139,7 @@ export class TasksService {
     const where: {
       userId: string;
       isCompleted?: boolean;
-      date?: { gte: Date; lt: Date };
+      date?: { gte: Date; lte: Date };
     } = { userId };
 
     // Filter by completion status
@@ -157,7 +157,7 @@ export class TasksService {
 
       where.date = {
         gte: startOfDay,
-        lt: endOfDay,
+        lte: endOfDay,
       };
     }
 
@@ -238,10 +238,17 @@ export class TasksService {
       updateData.completedAt = dto.isCompleted ? new Date() : null;
     }
 
-    return this.prisma.task.update({
+    const updatedTask = await this.prisma.task.update({
       where: { id: taskId },
       data: updateData,
     });
+
+    // If task was marked as complete, check if all tasks for the day are done
+    if (dto.isCompleted === true) {
+      await this.updateStreakIfAllComplete(userId, task.date);
+    }
+
+    return updatedTask;
   }
 
   async delete(taskId: string, userId: string): Promise<Task> {

@@ -13,6 +13,7 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const auth_module_1 = require("./auth/auth.module");
 const tasks_module_1 = require("./tasks/tasks.module");
 const rewards_module_1 = require("./rewards/rewards.module");
+const weekly_goals_module_1 = require("./weekly-goals/weekly-goals.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -26,6 +27,7 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             tasks_module_1.TasksModule,
             rewards_module_1.RewardsModule,
+            weekly_goals_module_1.WeeklyGoalsModule,
         ],
     })
 ], AppModule);

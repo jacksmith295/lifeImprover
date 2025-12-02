@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "WeeklyGoal" ADD COLUMN     "points" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "xpAwarded" BOOLEAN NOT NULL DEFAULT false;

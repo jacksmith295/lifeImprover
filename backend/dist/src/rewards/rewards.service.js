@@ -88,29 +88,29 @@ let RewardsService = class RewardsService {
         if (reward.redeemedAt) {
             throw new common_1.BadRequestException('Reward has already been redeemed');
         }
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-        });
-        if (!user) {
-            throw new common_1.NotFoundException('User not found');
-        }
-        if (user.coins < reward.cost) {
-            throw new common_1.BadRequestException(`Insufficient coins. You have ${user.coins} coins but need ${reward.cost}`);
-        }
-        const [updatedReward] = await this.prisma.$transaction([
-            this.prisma.reward.update({
-                where: { id: rewardId },
-                data: {
-                    redeemedAt: new Date(),
-                },
-            }),
-            this.prisma.user.update({
+        const updatedReward = await this.prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({
+                where: { id: userId },
+            });
+            if (!user) {
+                throw new common_1.NotFoundException('User not found');
+            }
+            if (user.coins < reward.cost) {
+                throw new common_1.BadRequestException(`Insufficient coins. You have ${user.coins} coins but need ${reward.cost}`);
+            }
+            await tx.user.update({
                 where: { id: userId },
                 data: {
                     coins: { decrement: reward.cost },
                 },
-            }),
-        ]);
+            });
+            return tx.reward.update({
+                where: { id: rewardId },
+                data: {
+                    redeemedAt: new Date(),
+                },
+            });
+        });
         return updatedReward;
     }
 };
