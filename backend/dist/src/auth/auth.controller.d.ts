@@ -14,7 +14,16 @@ export declare class AuthController {
         user: {
             id: string;
         };
-    }): {
+    }): Promise<{
         id: string;
-    };
+        email: string;
+        coins: number;
+        xp: number;
+        createdAt: Date;
+        streak: {
+            currentStreak: number;
+            longestStreak: number;
+            lastCompletedDate: Date | null;
+        } | null;
+    }>;
 }

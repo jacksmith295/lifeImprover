@@ -2,46 +2,22 @@ import { TasksService } from './tasks.service';
 import { Request } from 'express';
 import { Task } from './task.types';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskQueryDto } from './dto/task-query.dto';
+interface AuthenticatedRequest extends Request {
+    user: {
+        id: string;
+    };
+}
 export declare class TasksController {
     private readonly tasksService;
     constructor(tasksService: TasksService);
-    findAll(req: Request & {
-        user: {
-            id: string;
-        };
-    }): Promise<Task[]>;
-    create(dto: CreateTaskDto, req: Request & {
-        user: {
-            id: string;
-        };
-    }): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        category: import("@prisma/client").$Enums.Category | null;
-        date: Date;
-        points: number;
-        userId: string;
-        isCompleted: boolean;
-        completedAt: Date | null;
-    }>;
-    completeTask(id: string, req: Request & {
-        user: {
-            id: string;
-        };
-    }): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        category: import("@prisma/client").$Enums.Category | null;
-        date: Date;
-        points: number;
-        userId: string;
-        isCompleted: boolean;
-        completedAt: Date | null;
-    }>;
+    findAll(req: AuthenticatedRequest, query: TaskQueryDto): Promise<Task[]>;
+    findOne(id: string, req: AuthenticatedRequest): Promise<Task>;
+    create(dto: CreateTaskDto, req: AuthenticatedRequest): Promise<Task>;
+    update(id: string, dto: UpdateTaskDto, req: AuthenticatedRequest): Promise<Task>;
+    delete(id: string, req: AuthenticatedRequest): Promise<Task>;
+    completeTask(id: string, req: AuthenticatedRequest): Promise<Task>;
+    uncompleteTask(id: string, req: AuthenticatedRequest): Promise<Task>;
 }
+export {};

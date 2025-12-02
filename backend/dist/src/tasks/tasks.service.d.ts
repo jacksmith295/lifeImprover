@@ -1,34 +1,21 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { TaskQueryDto } from './dto/task-query.dto';
 import { Task } from './task.types';
 export declare class TasksService {
     private prisma;
     constructor(prisma: PrismaService);
-    findAll(userId: string): Promise<Task[]>;
-    create(userId: string, dto: CreateTaskDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        category: import("@prisma/client").$Enums.Category | null;
-        date: Date;
-        points: number;
-        userId: string;
-        isCompleted: boolean;
-        completedAt: Date | null;
-    }>;
-    completeTask(taskId: string, userId: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        title: string;
-        description: string | null;
-        category: import("@prisma/client").$Enums.Category | null;
-        date: Date;
-        points: number;
-        userId: string;
-        isCompleted: boolean;
-        completedAt: Date | null;
-    }>;
+    private isToday;
+    private isYesterday;
+    private getDayBounds;
+    private areAllTasksCompletedForDay;
+    private updateStreakIfAllComplete;
+    findAll(userId: string, query: TaskQueryDto): Promise<Task[]>;
+    findOne(taskId: string, userId: string): Promise<Task>;
+    create(userId: string, dto: CreateTaskDto): Promise<Task>;
+    update(taskId: string, userId: string, dto: UpdateTaskDto): Promise<Task>;
+    delete(taskId: string, userId: string): Promise<Task>;
+    completeTask(taskId: string, userId: string): Promise<Task>;
+    uncompleteTask(taskId: string, userId: string): Promise<Task>;
 }

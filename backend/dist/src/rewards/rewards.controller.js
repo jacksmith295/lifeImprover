@@ -12,49 +12,46 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TasksController = void 0;
+exports.RewardsController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_guard_1 = require("../auth/jwt/jwt.guard");
-const tasks_service_1 = require("./tasks.service");
-const create_task_dto_1 = require("./dto/create-task.dto");
-const update_task_dto_1 = require("./dto/update-task.dto");
-const task_query_dto_1 = require("./dto/task-query.dto");
-let TasksController = class TasksController {
-    tasksService;
-    constructor(tasksService) {
-        this.tasksService = tasksService;
+const rewards_service_1 = require("./rewards.service");
+const create_reward_dto_1 = require("./dto/create-reward.dto");
+const update_reward_dto_1 = require("./dto/update-reward.dto");
+const reward_query_dto_1 = require("./dto/reward-query.dto");
+let RewardsController = class RewardsController {
+    rewardsService;
+    constructor(rewardsService) {
+        this.rewardsService = rewardsService;
     }
     async findAll(req, query) {
-        return await this.tasksService.findAll(req.user.id, query);
+        return await this.rewardsService.findAll(req.user.id, query);
     }
     async findOne(id, req) {
-        return await this.tasksService.findOne(id, req.user.id);
+        return await this.rewardsService.findOne(id, req.user.id);
     }
     async create(dto, req) {
-        return await this.tasksService.create(req.user.id, dto);
+        return await this.rewardsService.create(req.user.id, dto);
     }
     async update(id, dto, req) {
-        return await this.tasksService.update(id, req.user.id, dto);
+        return await this.rewardsService.update(id, req.user.id, dto);
     }
     async delete(id, req) {
-        return await this.tasksService.delete(id, req.user.id);
+        return await this.rewardsService.delete(id, req.user.id);
     }
-    async completeTask(id, req) {
-        return await this.tasksService.completeTask(id, req.user.id);
-    }
-    async uncompleteTask(id, req) {
-        return await this.tasksService.uncompleteTask(id, req.user.id);
+    async redeem(id, req) {
+        return await this.rewardsService.redeem(id, req.user.id);
     }
 };
-exports.TasksController = TasksController;
+exports.RewardsController = RewardsController;
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, task_query_dto_1.TaskQueryDto]),
+    __metadata("design:paramtypes", [Object, reward_query_dto_1.RewardQueryDto]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "findAll", null);
+], RewardsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -62,24 +59,24 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "findOne", null);
+], RewardsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_task_dto_1.CreateTaskDto, Object]),
+    __metadata("design:paramtypes", [create_reward_dto_1.CreateRewardDto, Object]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "create", null);
+], RewardsController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_task_dto_1.UpdateTaskDto, Object]),
+    __metadata("design:paramtypes", [String, update_reward_dto_1.UpdateRewardDto, Object]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "update", null);
+], RewardsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -87,26 +84,18 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "delete", null);
+], RewardsController.prototype, "delete", null);
 __decorate([
-    (0, common_1.Patch)(':id/complete'),
+    (0, common_1.Post)(':id/redeem'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
-], TasksController.prototype, "completeTask", null);
-__decorate([
-    (0, common_1.Patch)(':id/uncomplete'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], TasksController.prototype, "uncompleteTask", null);
-exports.TasksController = TasksController = __decorate([
+], RewardsController.prototype, "redeem", null);
+exports.RewardsController = RewardsController = __decorate([
     (0, common_1.UseGuards)(jwt_guard_1.JwtAuthGuard),
-    (0, common_1.Controller)('tasks'),
-    __metadata("design:paramtypes", [tasks_service_1.TasksService])
-], TasksController);
-//# sourceMappingURL=tasks.controller.js.map
+    (0, common_1.Controller)('rewards'),
+    __metadata("design:paramtypes", [rewards_service_1.RewardsService])
+], RewardsController);
+//# sourceMappingURL=rewards.controller.js.map
