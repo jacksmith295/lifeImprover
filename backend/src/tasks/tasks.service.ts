@@ -3,16 +3,26 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
 import { Task } from './task.types';
+import {
+  AchievementsService,
+  UnlockedAchievement,
+} from 'src/achievements/achievements.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => AchievementsService))
+    private achievementsService: AchievementsService,
+  ) {}
 
   /**
    * Check if a date is today (ignoring time)
@@ -205,7 +215,7 @@ export class TasksService {
     taskId: string,
     userId: string,
     dto: UpdateTaskDto,
-  ): Promise<Task> {
+  ): Promise<{ task: Task; unlockedAchievements: UnlockedAchievement[] }> {
     // Verify task exists and belongs to user
     const task = await this.findOne(taskId, userId);
 
@@ -238,17 +248,60 @@ export class TasksService {
       updateData.completedAt = dto.isCompleted ? new Date() : null;
     }
 
-    const updatedTask = await this.prisma.task.update({
-      where: { id: taskId },
-      data: updateData,
-    });
+    // Check if completion status is actually changing
+    const isCompletingTask = dto.isCompleted === true && !task.isCompleted;
+    const isUncompletingTask = dto.isCompleted === false && task.isCompleted;
 
-    // If task was marked as complete, check if all tasks for the day are done
-    if (dto.isCompleted === true) {
-      await this.updateStreakIfAllComplete(userId, task.date);
+    let updatedTask: Task;
+
+    if (isCompletingTask) {
+      // Use transaction to update task and award XP/coins atomically
+      [updatedTask] = await this.prisma.$transaction([
+        this.prisma.task.update({
+          where: { id: taskId },
+          data: updateData,
+        }),
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            xp: { increment: task.points },
+            coins: { increment: task.points },
+          },
+        }),
+      ]);
+    } else if (isUncompletingTask) {
+      // Use transaction to update task and remove XP/coins atomically
+      [updatedTask] = await this.prisma.$transaction([
+        this.prisma.task.update({
+          where: { id: taskId },
+          data: updateData,
+        }),
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            xp: { decrement: task.points },
+            coins: { decrement: task.points },
+          },
+        }),
+      ]);
+    } else {
+      updatedTask = await this.prisma.task.update({
+        where: { id: taskId },
+        data: updateData,
+      });
     }
 
-    return updatedTask;
+    // If task was marked as complete, check if all tasks for the day are done
+    // Use the updated task's date in case it was changed during this update
+    let unlockedAchievements: UnlockedAchievement[] = [];
+    if (isCompletingTask) {
+      await this.updateStreakIfAllComplete(userId, updatedTask.date);
+      // Check for newly unlocked achievements
+      unlockedAchievements =
+        await this.achievementsService.checkAndUnlockAchievements(userId);
+    }
+
+    return { task: updatedTask, unlockedAchievements };
   }
 
   async delete(taskId: string, userId: string): Promise<Task> {
@@ -260,7 +313,10 @@ export class TasksService {
     });
   }
 
-  async completeTask(taskId: string, userId: string): Promise<Task> {
+  async completeTask(
+    taskId: string,
+    userId: string,
+  ): Promise<{ task: Task; unlockedAchievements: UnlockedAchievement[] }> {
     // Verify task exists and belongs to user
     const task = await this.findOne(taskId, userId);
 
@@ -294,7 +350,11 @@ export class TasksService {
     // Check if all tasks for today are now complete and update streak
     await this.updateStreakIfAllComplete(userId, task.date);
 
-    return updatedTask;
+    // Check for newly unlocked achievements
+    const unlockedAchievements =
+      await this.achievementsService.checkAndUnlockAchievements(userId);
+
+    return { task: updatedTask, unlockedAchievements };
   }
 
   async uncompleteTask(taskId: string, userId: string): Promise<Task> {

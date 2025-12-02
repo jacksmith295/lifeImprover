@@ -4,6 +4,7 @@ import { WeeklyGoal } from './weekly-goal.types';
 import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
 import { WeeklyGoalQueryDto } from './dto/weekly-goal-query.dto';
+import { UnlockedAchievement } from 'src/achievements/achievements.service';
 interface AuthenticatedRequest extends Request {
     user: {
         id: string;
@@ -19,10 +20,14 @@ export declare class WeeklyGoalsController {
     delete(id: string, req: AuthenticatedRequest): Promise<WeeklyGoal>;
     complete(id: string, req: AuthenticatedRequest): Promise<WeeklyGoal>;
     uncomplete(id: string, req: AuthenticatedRequest): Promise<WeeklyGoal>;
-    claimXp(id: string, req: AuthenticatedRequest): Promise<WeeklyGoal>;
+    claimXp(id: string, req: AuthenticatedRequest): Promise<{
+        goal: WeeklyGoal;
+        unlockedAchievements: UnlockedAchievement[];
+    }>;
     claimAllPendingXp(req: AuthenticatedRequest): Promise<{
         claimed: number;
         totalXp: number;
+        unlockedAchievements: UnlockedAchievement[];
     }>;
 }
 export {};

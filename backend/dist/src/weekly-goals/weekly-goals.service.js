@@ -8,14 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WeeklyGoalsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const achievements_service_1 = require("../achievements/achievements.service");
 let WeeklyGoalsService = class WeeklyGoalsService {
     prisma;
-    constructor(prisma) {
+    achievementsService;
+    constructor(prisma, achievementsService) {
         this.prisma = prisma;
+        this.achievementsService = achievementsService;
     }
     getWeekStart(date) {
         const d = new Date(date);
@@ -166,10 +172,10 @@ let WeeklyGoalsService = class WeeklyGoalsService {
                 data: { xpAwarded: true },
             });
         });
-        return updatedGoal;
+        const unlockedAchievements = await this.achievementsService.checkAndUnlockAchievements(userId);
+        return { goal: updatedGoal, unlockedAchievements };
     }
     async claimAllPendingXp(userId) {
-        const now = new Date();
         const pendingGoals = await this.prisma.weeklyGoal.findMany({
             where: {
                 userId,
@@ -179,7 +185,7 @@ let WeeklyGoalsService = class WeeklyGoalsService {
         });
         const claimableGoals = pendingGoals.filter((goal) => this.hasWeekEnded(goal.weekStartDate));
         if (claimableGoals.length === 0) {
-            return { claimed: 0, totalXp: 0 };
+            return { claimed: 0, totalXp: 0, unlockedAchievements: [] };
         }
         const totalXp = claimableGoals.reduce((sum, goal) => sum + goal.points, 0);
         const goalIds = claimableGoals.map((goal) => goal.id);
@@ -196,12 +202,15 @@ let WeeklyGoalsService = class WeeklyGoalsService {
                 data: { xpAwarded: true },
             });
         });
-        return { claimed: claimableGoals.length, totalXp };
+        const unlockedAchievements = await this.achievementsService.checkAndUnlockAchievements(userId);
+        return { claimed: claimableGoals.length, totalXp, unlockedAchievements };
     }
 };
 exports.WeeklyGoalsService = WeeklyGoalsService;
 exports.WeeklyGoalsService = WeeklyGoalsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __param(1, (0, common_1.Inject)((0, common_1.forwardRef)(() => achievements_service_1.AchievementsService))),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        achievements_service_1.AchievementsService])
 ], WeeklyGoalsService);
 //# sourceMappingURL=weekly-goals.service.js.map

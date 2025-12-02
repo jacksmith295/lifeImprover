@@ -8,14 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TasksService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const achievements_service_1 = require("../achievements/achievements.service");
 let TasksService = class TasksService {
     prisma;
-    constructor(prisma) {
+    achievementsService;
+    constructor(prisma, achievementsService) {
         this.prisma = prisma;
+        this.achievementsService = achievementsService;
     }
     isToday(date) {
         const today = new Date();
@@ -164,14 +170,52 @@ let TasksService = class TasksService {
             updateData.isCompleted = dto.isCompleted;
             updateData.completedAt = dto.isCompleted ? new Date() : null;
         }
-        const updatedTask = await this.prisma.task.update({
-            where: { id: taskId },
-            data: updateData,
-        });
-        if (dto.isCompleted === true) {
-            await this.updateStreakIfAllComplete(userId, task.date);
+        const isCompletingTask = dto.isCompleted === true && !task.isCompleted;
+        const isUncompletingTask = dto.isCompleted === false && task.isCompleted;
+        let updatedTask;
+        if (isCompletingTask) {
+            [updatedTask] = await this.prisma.$transaction([
+                this.prisma.task.update({
+                    where: { id: taskId },
+                    data: updateData,
+                }),
+                this.prisma.user.update({
+                    where: { id: userId },
+                    data: {
+                        xp: { increment: task.points },
+                        coins: { increment: task.points },
+                    },
+                }),
+            ]);
         }
-        return updatedTask;
+        else if (isUncompletingTask) {
+            [updatedTask] = await this.prisma.$transaction([
+                this.prisma.task.update({
+                    where: { id: taskId },
+                    data: updateData,
+                }),
+                this.prisma.user.update({
+                    where: { id: userId },
+                    data: {
+                        xp: { decrement: task.points },
+                        coins: { decrement: task.points },
+                    },
+                }),
+            ]);
+        }
+        else {
+            updatedTask = await this.prisma.task.update({
+                where: { id: taskId },
+                data: updateData,
+            });
+        }
+        let unlockedAchievements = [];
+        if (isCompletingTask) {
+            await this.updateStreakIfAllComplete(userId, updatedTask.date);
+            unlockedAchievements =
+                await this.achievementsService.checkAndUnlockAchievements(userId);
+        }
+        return { task: updatedTask, unlockedAchievements };
     }
     async delete(taskId, userId) {
         await this.findOne(taskId, userId);
@@ -204,7 +248,8 @@ let TasksService = class TasksService {
             }),
         ]);
         await this.updateStreakIfAllComplete(userId, task.date);
-        return updatedTask;
+        const unlockedAchievements = await this.achievementsService.checkAndUnlockAchievements(userId);
+        return { task: updatedTask, unlockedAchievements };
     }
     async uncompleteTask(taskId, userId) {
         const task = await this.findOne(taskId, userId);
@@ -236,6 +281,8 @@ let TasksService = class TasksService {
 exports.TasksService = TasksService;
 exports.TasksService = TasksService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __param(1, (0, common_1.Inject)((0, common_1.forwardRef)(() => achievements_service_1.AchievementsService))),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        achievements_service_1.AchievementsService])
 ], TasksService);
 //# sourceMappingURL=tasks.service.js.map

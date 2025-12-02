@@ -68,7 +68,7 @@ let AuthService = class AuthService {
             where: { email },
         });
         if (existing) {
-            throw new Error('User already exists');
+            throw new common_1.ConflictException('User already exists');
         }
         const passwordHash = await this.hashPassword(password);
         const user = await this.prisma.user.create({
@@ -86,11 +86,13 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({
             where: { email },
         });
-        if (!user)
-            throw new Error('Invalid email or password');
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
+        }
         const isValid = await this.validatePassword(password, user.passwordHash);
-        if (!isValid)
-            throw new Error('Invalid email or password');
+        if (!isValid) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
+        }
         const token = await this.generateToken(user.id);
         return { access_token: token };
     }
@@ -112,9 +114,68 @@ let AuthService = class AuthService {
                 },
             },
         });
-        if (!user)
-            throw new Error('User not found');
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
         return user;
+    }
+    async updateProfile(userId, email) {
+        if (email) {
+            const existing = await this.prisma.user.findUnique({
+                where: { email },
+            });
+            if (existing && existing.id !== userId) {
+                throw new common_1.ConflictException('Email already in use');
+            }
+        }
+        const user = await this.prisma.user.update({
+            where: { id: userId },
+            data: { ...(email && { email }) },
+            select: {
+                id: true,
+                email: true,
+                coins: true,
+                xp: true,
+                createdAt: true,
+                streak: {
+                    select: {
+                        currentStreak: true,
+                        longestStreak: true,
+                        lastCompletedDate: true,
+                    },
+                },
+            },
+        });
+        return user;
+    }
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        const isValid = await this.validatePassword(currentPassword, user.passwordHash);
+        if (!isValid) {
+            throw new common_1.BadRequestException('Current password is incorrect');
+        }
+        const passwordHash = await this.hashPassword(newPassword);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash },
+        });
+        return { message: 'Password changed successfully' };
+    }
+    async deleteAccount(userId) {
+        await this.prisma.$transaction([
+            this.prisma.task.deleteMany({ where: { userId } }),
+            this.prisma.weeklyGoal.deleteMany({ where: { userId } }),
+            this.prisma.reward.deleteMany({ where: { userId } }),
+            this.prisma.userAchievement.deleteMany({ where: { userId } }),
+            this.prisma.streak.deleteMany({ where: { userId } }),
+            this.prisma.user.delete({ where: { id: userId } }),
+        ]);
+        return { message: 'Account deleted successfully' };
     }
 };
 exports.AuthService = AuthService;

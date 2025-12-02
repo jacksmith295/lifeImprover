@@ -5,6 +5,9 @@ import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { WeeklyGoalsModule } from './weekly-goals/weekly-goals.module';
+import { StatsModule } from './stats/stats.module';
+import { StreaksModule } from './streaks/streaks.module';
+import { AchievementsModule } from './achievements/achievements.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { WeeklyGoalsModule } from './weekly-goals/weekly-goals.module';
     TasksModule,
     RewardsModule,
     WeeklyGoalsModule,
+    StatsModule,
+    StreaksModule,
+    AchievementsModule,
   ],
 })
 export class AppModule {}

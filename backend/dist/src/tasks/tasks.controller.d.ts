@@ -4,6 +4,7 @@ import { Task } from './task.types';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { UnlockedAchievement } from 'src/achievements/achievements.service';
 interface AuthenticatedRequest extends Request {
     user: {
         id: string;
@@ -15,9 +16,15 @@ export declare class TasksController {
     findAll(req: AuthenticatedRequest, query: TaskQueryDto): Promise<Task[]>;
     findOne(id: string, req: AuthenticatedRequest): Promise<Task>;
     create(dto: CreateTaskDto, req: AuthenticatedRequest): Promise<Task>;
-    update(id: string, dto: UpdateTaskDto, req: AuthenticatedRequest): Promise<Task>;
+    update(id: string, dto: UpdateTaskDto, req: AuthenticatedRequest): Promise<{
+        task: Task;
+        unlockedAchievements: UnlockedAchievement[];
+    }>;
     delete(id: string, req: AuthenticatedRequest): Promise<Task>;
-    completeTask(id: string, req: AuthenticatedRequest): Promise<Task>;
+    completeTask(id: string, req: AuthenticatedRequest): Promise<{
+        task: Task;
+        unlockedAchievements: UnlockedAchievement[];
+    }>;
     uncompleteTask(id: string, req: AuthenticatedRequest): Promise<Task>;
 }
 export {};

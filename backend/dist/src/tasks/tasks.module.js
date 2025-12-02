@@ -12,12 +12,13 @@ const tasks_service_1 = require("./tasks.service");
 const tasks_controller_1 = require("./tasks.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
 const auth_module_1 = require("../auth/auth.module");
+const achievements_module_1 = require("../achievements/achievements.module");
 let TasksModule = class TasksModule {
 };
 exports.TasksModule = TasksModule;
 exports.TasksModule = TasksModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule],
+        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, (0, common_1.forwardRef)(() => achievements_module_1.AchievementsModule)],
         controllers: [tasks_controller_1.TasksController],
         providers: [tasks_service_1.TasksService],
     })

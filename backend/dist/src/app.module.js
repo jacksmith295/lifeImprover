@@ -14,6 +14,9 @@ const auth_module_1 = require("./auth/auth.module");
 const tasks_module_1 = require("./tasks/tasks.module");
 const rewards_module_1 = require("./rewards/rewards.module");
 const weekly_goals_module_1 = require("./weekly-goals/weekly-goals.module");
+const stats_module_1 = require("./stats/stats.module");
+const streaks_module_1 = require("./streaks/streaks.module");
+const achievements_module_1 = require("./achievements/achievements.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -28,6 +31,9 @@ exports.AppModule = AppModule = __decorate([
             tasks_module_1.TasksModule,
             rewards_module_1.RewardsModule,
             weekly_goals_module_1.WeeklyGoalsModule,
+            stats_module_1.StatsModule,
+            streaks_module_1.StreaksModule,
+            achievements_module_1.AchievementsModule,
         ],
     })
 ], AppModule);

@@ -3,16 +3,26 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
 import { WeeklyGoalQueryDto } from './dto/weekly-goal-query.dto';
 import { WeeklyGoal } from './weekly-goal.types';
+import {
+  AchievementsService,
+  UnlockedAchievement,
+} from 'src/achievements/achievements.service';
 
 @Injectable()
 export class WeeklyGoalsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => AchievementsService))
+    private achievementsService: AchievementsService,
+  ) {}
 
   /**
    * Normalize a date to the Monday of its week (start of week)
@@ -199,7 +209,10 @@ export class WeeklyGoalsService {
     });
   }
 
-  async claimXp(goalId: string, userId: string): Promise<WeeklyGoal> {
+  async claimXp(
+    goalId: string,
+    userId: string,
+  ): Promise<{ goal: WeeklyGoal; unlockedAchievements: UnlockedAchievement[] }> {
     // Verify goal exists and belongs to user
     const goal = await this.findOne(goalId, userId);
 
@@ -237,15 +250,23 @@ export class WeeklyGoalsService {
       });
     });
 
-    return updatedGoal;
+    // Check for newly unlocked achievements
+    const unlockedAchievements =
+      await this.achievementsService.checkAndUnlockAchievements(userId);
+
+    return { goal: updatedGoal, unlockedAchievements };
   }
 
   /**
    * Claim XP for all completed goals from past weeks that haven't been awarded
    */
-  async claimAllPendingXp(userId: string): Promise<{ claimed: number; totalXp: number }> {
-    const now = new Date();
-
+  async claimAllPendingXp(
+    userId: string,
+  ): Promise<{
+    claimed: number;
+    totalXp: number;
+    unlockedAchievements: UnlockedAchievement[];
+  }> {
     // Find all completed goals where week has ended and XP not awarded
     const pendingGoals = await this.prisma.weeklyGoal.findMany({
       where: {
@@ -261,7 +282,7 @@ export class WeeklyGoalsService {
     );
 
     if (claimableGoals.length === 0) {
-      return { claimed: 0, totalXp: 0 };
+      return { claimed: 0, totalXp: 0, unlockedAchievements: [] };
     }
 
     const totalXp = claimableGoals.reduce((sum, goal) => sum + goal.points, 0);
@@ -283,7 +304,11 @@ export class WeeklyGoalsService {
       });
     });
 
-    return { claimed: claimableGoals.length, totalXp };
+    // Check for newly unlocked achievements
+    const unlockedAchievements =
+      await this.achievementsService.checkAndUnlockAchievements(userId);
+
+    return { claimed: claimableGoals.length, totalXp, unlockedAchievements };
   }
 }
 

@@ -15,15 +15,33 @@ export declare class AuthService {
         access_token: string;
     }>;
     getProfile(userId: string): Promise<{
+        id: string;
         streak: {
             currentStreak: number;
             longestStreak: number;
             lastCompletedDate: Date | null;
         } | null;
-        id: string;
         email: string;
         coins: number;
         xp: number;
         createdAt: Date;
+    }>;
+    updateProfile(userId: string, email?: string): Promise<{
+        id: string;
+        streak: {
+            currentStreak: number;
+            longestStreak: number;
+            lastCompletedDate: Date | null;
+        } | null;
+        email: string;
+        coins: number;
+        xp: number;
+        createdAt: Date;
+    }>;
+    changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{
+        message: string;
+    }>;
+    deleteAccount(userId: string): Promise<{
+        message: string;
     }>;
 }

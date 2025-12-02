@@ -12,12 +12,13 @@ const weekly_goals_service_1 = require("./weekly-goals.service");
 const weekly_goals_controller_1 = require("./weekly-goals.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
 const auth_module_1 = require("../auth/auth.module");
+const achievements_module_1 = require("../achievements/achievements.module");
 let WeeklyGoalsModule = class WeeklyGoalsModule {
 };
 exports.WeeklyGoalsModule = WeeklyGoalsModule;
 exports.WeeklyGoalsModule = WeeklyGoalsModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule],
+        imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, (0, common_1.forwardRef)(() => achievements_module_1.AchievementsModule)],
         controllers: [weekly_goals_controller_1.WeeklyGoalsController],
         providers: [weekly_goals_service_1.WeeklyGoalsService],
     })

@@ -3,9 +3,11 @@ import { CreateWeeklyGoalDto } from './dto/create-weekly-goal.dto';
 import { UpdateWeeklyGoalDto } from './dto/update-weekly-goal.dto';
 import { WeeklyGoalQueryDto } from './dto/weekly-goal-query.dto';
 import { WeeklyGoal } from './weekly-goal.types';
+import { AchievementsService, UnlockedAchievement } from 'src/achievements/achievements.service';
 export declare class WeeklyGoalsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private achievementsService;
+    constructor(prisma: PrismaService, achievementsService: AchievementsService);
     private getWeekStart;
     private getWeekEnd;
     private hasWeekEnded;
@@ -16,9 +18,13 @@ export declare class WeeklyGoalsService {
     delete(goalId: string, userId: string): Promise<WeeklyGoal>;
     complete(goalId: string, userId: string): Promise<WeeklyGoal>;
     uncomplete(goalId: string, userId: string): Promise<WeeklyGoal>;
-    claimXp(goalId: string, userId: string): Promise<WeeklyGoal>;
+    claimXp(goalId: string, userId: string): Promise<{
+        goal: WeeklyGoal;
+        unlockedAchievements: UnlockedAchievement[];
+    }>;
     claimAllPendingXp(userId: string): Promise<{
         claimed: number;
         totalXp: number;
+        unlockedAchievements: UnlockedAchievement[];
     }>;
 }

@@ -17,6 +17,7 @@ import { Task } from './task.types';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { UnlockedAchievement } from 'src/achievements/achievements.service';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string };
@@ -56,7 +57,7 @@ export class TasksController {
     @Param('id') id: string,
     @Body() dto: UpdateTaskDto,
     @Req() req: AuthenticatedRequest,
-  ): Promise<Task> {
+  ): Promise<{ task: Task; unlockedAchievements: UnlockedAchievement[] }> {
     return await this.tasksService.update(id, req.user.id, dto);
   }
 
@@ -72,7 +73,7 @@ export class TasksController {
   async completeTask(
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
-  ): Promise<Task> {
+  ): Promise<{ task: Task; unlockedAchievements: UnlockedAchievement[] }> {
     return await this.tasksService.completeTask(id, req.user.id);
   }
 

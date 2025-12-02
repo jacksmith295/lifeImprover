@@ -36,7 +36,7 @@ model User {
   tasks        Task[]
   weeklyGoals  WeeklyGoal[]
   rewards      Reward[]
-  achievements Achievement?
+  achievements UserAchievement[]
   streak       Streak?
 }
 
@@ -92,15 +92,37 @@ model Reward {
   updatedAt   DateTime   @updatedAt
 }
 
-model Achievement {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id])
+// Achievement definitions (seeded data)
+model AchievementDefinition {
+  id               String   @id @default(uuid())
+  key              String   @unique  // e.g., "COMPLETE_10_TASKS"
+  name             String
+  description      String
+  icon             String?
+  
+  // Requirement configuration
+  requirementType  String   // "TASKS_COMPLETED", "STREAK_DAYS", "XP_EARNED", "GOALS_COMPLETED"
+  requirementValue Int      // The threshold value
+  category         Category? // Optional: for category-specific achievements
+  
+  // Rewards for unlocking
+  xpReward         Int      @default(0)
+  coinReward       Int      @default(0)
+  
+  unlockedBy       UserAchievement[]
+}
 
-  name        String
-  description String?
-  icon        String?
-  achievedAt  DateTime  @default(now())
+// Junction table: which user has which achievements
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  
+  user          User                  @relation(fields: [userId], references: [id])
+  achievement   AchievementDefinition @relation(fields: [achievementId], references: [id])
+  
+  @@unique([userId, achievementId])
 }
 
 model Streak {
